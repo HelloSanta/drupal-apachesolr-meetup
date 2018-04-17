@@ -1,0 +1,49 @@
+version: '3'
+services:
+  solr:
+    image: solr:6.6
+    ports:
+     - "8983:8983"
+    volumes:
+      - ./apachesolr:/opt/solr/server/solr/mycores
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - drupal
+    restart: always
+    container_name: apachesolr
+
+  mysql-5-7:
+    image: mysql:5.7.20
+    volumes:
+      - ./mysql/db/:/var/lib/mysql
+      - ./mysql/conf/:/etc/mysql/conf.d
+    environment:
+      - MYSQL_USER=drupal
+      - MYSQL_PASSWORD=drupal
+      - MYSQL_DATABASE=drupal
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+    restart: always
+    container_name: mysql-5-7
+
+  drupal:
+    image: hellosanta/php4drupal:php7.0-apache
+    ports:
+      - "80:80"
+    volumes:
+      - ./www:/var/www/html
+    environment:
+      UPLOAD_MAX_FILESIZE: 30
+      POST_MAX_SIZE: 30
+      MEMORY_LIMIT: 256
+      MAX_INPUT_VARS: 2000
+    restart: always
+    container_name: drupal-meetup-website
+    links:
+      - mysql-5-7:mysql-5-7
+      - solr:solr
+
+volumes:
+  apachesolr:
+  mysql:
+  www:
